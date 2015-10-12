@@ -151,3 +151,40 @@ module ex1-4 where
   eq_rec_ℕ : ∀ {i} {C : Set i} → (c0 : C) → (cs : ℕ → C → C) → (n : ℕ)
            → irec_ℕ c0 cs n ≡ rec_ℕ c0 cs n
   eq_rec_ℕ c0 cs n = ap snd (irec_lemma c0 cs n)
+
+module ex1-5 where
+
+  -- coproduct type in BrutalPreface is ∨
+
+  -- coproduct via dependent pairs.  i think there's no reason to have A and B
+  -- in different universes, we can always change universes
+  _⊕_ : ∀ {i} (A B : Set i) → Set i
+  A ⊕ B = Σ Bool (rec_Bool A B)
+
+  -- "constructors"
+  inl_⊕ : ∀ {i} {A B : Set i} (a : A) → A ⊕ B
+  inl_⊕ a = true , a
+
+  inr_⊕ : ∀ {i} {A B : Set i} (b : B) → A ⊕ B
+  inr_⊕ b = false , b
+
+  -- induction
+  ind_⊕ : ∀ {i j} {A B : Set i}
+        → (C : A ⊕ B → Set j)
+        → (g0 : (a : A) → C (inl_⊕ a)) → (g1 : (b : B) → C (inr_⊕ b))
+        → (s : (A ⊕ B)) → C s
+  ind_⊕ _ g0 _ (true , a) = g0 a
+  ind_⊕ _ _ g1 (false , b) = g1 b
+
+  -- proofs
+  indl_⊕ : ∀ {i j} {A B : Set i}
+         → (C : A ⊕ B → Set j)
+         → (g0 : (a : A) → C (inl_⊕ a)) → (g1 : (b : B) → C (inr_⊕ b))
+         → (a : A) → ind_⊕ C g0 g1 (inl_⊕ a) ≡ g0 a
+  indl_⊕ _ _ _ _ = refl
+
+  indr_⊕ : ∀ {i j} {A B : Set i}
+         → (C : A ⊕ B → Set j)
+         → (g0 : (a : A) → C (inl_⊕ a)) → (g1 : (b : B) → C (inr_⊕ b))
+         → (b : B) → ind_⊕ C g0 g1 (inr_⊕ b) ≡ g1 b
+  indr_⊕ _ _ _ _ = refl
