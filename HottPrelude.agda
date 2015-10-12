@@ -120,6 +120,40 @@ module Function where
 
 open Function public
 
+module Boolean where
+
+  data Bool : Set where
+    true  : Bool
+    false : Bool
+
+  {-# BUILTIN BOOL  Bool  #-}
+  {-# BUILTIN TRUE  true  #-}
+  {-# BUILTIN FALSE false #-}
+
+  {-# COMPILED_DATA Bool Bool True False #-}
+
+  {-# COMPILED_JS Bool  function (x,v) { return ((x)? v["true"]() : v["false"]()); } #-}
+  {-# COMPILED_JS true  true  #-}
+  {-# COMPILED_JS false false #-}
+
+  not : Bool → Bool
+  not true  = false
+  not false = true
+
+  if_then_else_ : ∀ {a} {A : Set a} → Bool → A → A → A
+  if true  then t else f = t
+  if false then t else f = f
+
+  _∧_ : Bool → Bool → Bool
+  true  ∧ b = b
+  false ∧ b = false
+
+  _∨_ : Bool → Bool → Bool
+  true  ∨ b = true
+  false ∨ b = b
+
+open Boolean public
+
 module Product where
   -- dependent product
   infixr 60 _,_
