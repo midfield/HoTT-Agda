@@ -29,6 +29,14 @@ module Equality where
   {-# BUILTIN EQUALITY _≡_ #-}
   {-# BUILTIN REFL  idp #-}
 
+  sym : ∀ {i} {A : Set i} {x y : A}
+      → (x ≡ y) → (y ≡ x)
+  sym idp = idp
+
+  trans : ∀ {i} {A : Set i} {x y z : A}
+        → (x ≡ y) → (y ≡ z) → (x ≡ z)
+  trans idp idp = idp
+
   {- Dependent paths
 
   The notion of dependent path is a very important notion.
@@ -55,6 +63,8 @@ module Equality where
   defined in terms of [ap↓] because it shouldn’t change anything for the user
   and this is helpful in some rare cases)
   -}
+
+  {- ap is cong, transport is subst -}
 
   ap : ∀ {i j} {A : Type i} {B : Type j} (f : A → B) {x y : A}
     → (x ≡ y → f x ≡ f y)
@@ -98,8 +108,18 @@ module Equality where
     → (B y → B x)
   transport! B p = coe! (ap B p)
 
+  {- equational reasoning -}
+  infix  15 _∎
+  infixr 10 _=⟨_⟩_
 
-  {- ap is cong, transport is subst -}
+  _=⟨_⟩_ : ∀ {i} {A : Type i} (x : A) {y z : A} → x ≡ y → y ≡ z → x ≡ z
+  _ =⟨ idp ⟩ idp = idp
+
+  _∎ : ∀ {i} {A : Type i} (x : A) → x ≡ x
+  _ ∎ = idp
+
+  infixr 40 ap
+  syntax ap f p = p |in-ctx f
 
 open Equality public
 
@@ -120,37 +140,55 @@ module Function where
 
 open Function public
 
+module FunExt where
+{- here is a naive definition of function extensionality
+
+  postulate fext : ∀ {i j} {A : Set i} {B : A → Set j} {f g : (a : A) → B a}
+                → ((x : A) → f x ≡ g x) → f ≡ g
+
+  however this is not strong enough to prove useful stuff, like ex 1.6.  we need
+  quasi-equivlance. -}
+
+  -- taken from the book / HoTT-Agda
+
+  happly : ∀ {i j} {A : Set i} {B : A → Set j} (f g : (a : A) → B a)
+         → (f ≡ g) → ((x : A) → f x ≡ g x)
+  happly f .f idp x = idp
+--  happly f g p x = ap (λ u → u x) p
+
+  happly2 : ∀ {i j} {A : Set i} {B : A → Set j} {f g : (a : A) → B a}
+         → (f ≡ g) → ((x : A) → f x ≡ g x)
+  happly2 {f} {g} idp x = idp
+
+  record is-equiv {i j} {A : Set i} {B : Set j} (f : A → B) : Set (lmax i j)
+    where
+    field
+      g : B → A
+      f-g : (b : B) → f (g b) ≡ b
+      g-f : (a : A) → g (f a) ≡ a
+      adj : (a : A) → ap f (g-f a) ≡ f-g (f a)
+
+  postulate
+    funext : ∀ {i j} {A : Set i} {B : A → Set j} (f g : (a : A) → B a)
+           → is-equiv (happly f g)
+
+--  postulate
+--    funext2 : ∀ {i j} {A : Set i} {B : A → Set j} (f g : (a : A) → B a)
+--           → is-equiv (happly2 {f} {g})
+
+open FunExt public
+
 module Boolean where
 
-  data Bool : Set where
-    true  : Bool
+  data Bool : Type₀ where
+    true : Bool
     false : Bool
 
-  {-# BUILTIN BOOL  Bool  #-}
-  {-# BUILTIN TRUE  true  #-}
-  {-# BUILTIN FALSE false #-}
-
-  {-# COMPILED_DATA Bool Bool True False #-}
-
-  {-# COMPILED_JS Bool  function (x,v) { return ((x)? v["true"]() : v["false"]()); } #-}
-  {-# COMPILED_JS true  true  #-}
-  {-# COMPILED_JS false false #-}
-
-  not : Bool → Bool
-  not true  = false
-  not false = true
-
-  if_then_else_ : ∀ {a} {A : Set a} → Bool → A → A → A
-  if true  then t else f = t
-  if false then t else f = f
-
-  _∧_ : Bool → Bool → Bool
-  true  ∧ b = b
-  false ∧ b = false
-
-  _∨_ : Bool → Bool → Bool
-  true  ∨ b = true
-  false ∨ b = b
+  if_then_else_ : ∀ {i} {A : Bool → Type i}
+    (b : Bool) (t : A true) (e : A false)
+    → A b
+  if true then t else e = t
+  if false then t else e = e
 
 open Boolean public
 
@@ -169,6 +207,22 @@ module Product where
   A × B = Σ A (λ _ → B)
 
 open Product public
+
+module Coproduct where
+
+  data Coprod {i j} (A : Type i) (B : Type j) : Type (lmax i j) where
+    inl : A → Coprod A B
+    inr : B → Coprod A B
+
+  _⊔_ = Coprod
+
+  match_withl_withr_ : ∀ {i j k} {A : Type i} {B : Type j}
+    {C : Coprod A B → Type k}
+    (x : Coprod A B) (l : (a : A) → C (inl a)) (r : (b : B) → C (inr b)) → C x
+  match (inl a) withl l withr r = l a
+  match (inr b) withl l withr r = r b
+
+open Coproduct public
 
 module Nat where
   data ℕ : Set where
