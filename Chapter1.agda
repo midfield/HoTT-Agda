@@ -152,9 +152,16 @@ module ex1-4 where
            → irec_ℕ c0 cs n ≡ rec_ℕ c0 cs n
   eq_rec_ℕ c0 cs n = ap snd (irec_lemma c0 cs n)
 
-module ex1-5 where
 
-  -- coproduct type in BrutalPreface is ∨
+module RecBool where
+
+  -- fancy if-then-else
+  rec_Bool : ∀ {i} {A : Set i} → A → A → Bool → A
+  rec_Bool c0 c1 b = if b then c0 else c1
+
+open RecBool public
+
+module ex1-5 where
 
   -- coproduct via dependent pairs.  i think there's no reason to have A and B
   -- in different universes, we can always change universes
@@ -181,10 +188,132 @@ module ex1-5 where
          → (C : A ⊕ B → Set j)
          → (g0 : (a : A) → C (inl_⊕ a)) → (g1 : (b : B) → C (inr_⊕ b))
          → (a : A) → ind_⊕ C g0 g1 (inl_⊕ a) ≡ g0 a
-  indl_⊕ _ _ _ _ = refl
+  indl_⊕ _ _ _ _ = idp
 
   indr_⊕ : ∀ {i j} {A B : Set i}
          → (C : A ⊕ B → Set j)
          → (g0 : (a : A) → C (inl_⊕ a)) → (g1 : (b : B) → C (inr_⊕ b))
          → (b : B) → ind_⊕ C g0 g1 (inr_⊕ b) ≡ g1 b
-  indr_⊕ _ _ _ _ = refl
+  indr_⊕ _ _ _ _ = idp
+
+module ex1-6 where
+
+  -- product via dependent functions
+  _⊗_ : ∀ {i} (A B : Set i) → Set i
+  A ⊗ B = (t : Bool) → rec_Bool A B t
+
+  -- "constructors"
+  _,'_ : ∀ {i} {A B : Set i}
+       → A → B → A ⊗ B
+  _,'_ a b true = a
+  _,'_ a b false = b
+
+  -- projections
+  projl_⊗ : ∀ {i} {A B : Set i} → A ⊗ B → A
+  projl_⊗ f = f true
+
+  projr_⊗ : ∀ {i} {A B : Set i} → A ⊗ B → B
+  projr_⊗ f = f false
+
+  ptwise : ∀ {i} {A B : Set i}
+         → {p : A ⊗ B} → (x : Bool) → (projl_⊗ p ,' projr_⊗ p) x ≡ p x
+  ptwise true = idp
+  ptwise false = idp
+
+
+  -- propositional uniqueness
+  -- function extensionality is needed for propositional uniqueness
+  uppt_⊗ : ∀ {i} {A B : Set i}
+         → (p : A ⊗ B) → (projl_⊗ p ,' projr_⊗ p) ≡ p
+  uppt_⊗ p = is-equiv.g (funext (projl_⊗ p ,' projr_⊗ p) p) ptwise
+
+{-
+
+taking apart how this works:
+
+for x ∈ A ⊗ B, f = (p1 x, p2 x) and g = x are both functions (domain Bool)
+
+happly says that equality on functions gives pointwise equality
+
+funext postulates that happly is a quasi-isomorphism, with quasi-inverse
+is-equiv.g
+
+ptwise is a function which gives pointwise equality between f and g
+
+uppt = is-equiv.g funext ptwise is the quasi-inverse, e.g. gives equality between
+f and g as functions.
+
+now in the special case when x = (a , b), then in fact f and g are
+definitionally equal (idp ∈ f ≡ g).  what is uppt_⊗ x in this case?  it would be
+nice if it is equivalent to idp.
+
+let H = happly be the forward equivalence, and G be the quasi inverse.  then
+is-equiv says (if idp is equivalence of functions)
+
+G (H idp) ≡ idp
+
+this is close but not quite what we want.  (H idp) gives a pointwise equality,
+but we need to show it is the same as λ {...}.  this appears to require another
+use of funext.
+
+-}
+
+  -- induction
+  ind_⊗ : ∀ {i j} {A B : Set i}
+        → (C : A ⊗ B → Set j)
+        → (g : (a : A) → (b : B) → C (a ,' b))
+        → (p : A ⊗ B) → C p
+  ind_⊗ C g p = transport C (uppt_⊗ p) (g (projl_⊗ p) (projr_⊗ p))
+
+
+  lemma1 : ∀ {i} {A B : Set i}
+         → (a : A) → (b : B)
+         → happly (projl_⊗ (a ,' b) ,' projr_⊗ (a ,' b)) (a ,' b) idp
+         ≡ ptwise {i} {A} {B} {(a ,' b)}
+  lemma1 {i} {A} {B} a b = is-equiv.g (funext (λ x → idp) (ptwise {i} {A} {B} { (a ,' b) } ) )
+         (λ { true → idp; false → idp })
+
+
+  lemma2 : ∀ {i} {A B : Set i}
+         → (a : A) → (b : B)
+         →  is-equiv.g (funext (projl_⊗ (a ,' b) ,' projr_⊗ (a ,' b)) (a ,' b)) (happly (projl_⊗ (a ,' b) ,' projr_⊗ (a ,' b)) (a ,' b) idp)
+         ≡ uppt_⊗ (a ,' b)
+  lemma2 {i} {A} {B} a b = ap feg (lemma1 {i} {A} {B} a b)
+    where
+      p : A ⊗ B
+      p = (a ,' b)
+      feg : ((b : Bool) → (projl_⊗ p ,' projr_⊗ p) b ≡ p b) → ((projl_⊗ p ,' projr_⊗ p) ≡ p)
+      feg = is-equiv.g (funext (projl_⊗ p ,' projr_⊗ p) p)
+
+  lemma3 : ∀ {i} {A B : Set i}
+         → (a : A) → (b : B)
+         →  is-equiv.g  (funext (projl_⊗ (a ,' b) ,' projr_⊗ (a ,' b)) (a ,' b)) (happly (projl_⊗ (a ,' b) ,' projr_⊗ (a ,' b)) (a ,' b) idp) ≡ idp
+  lemma3 {i} {A} {B} a b = is-equiv.g-f  (funext (projl_⊗ (a ,' b) ,' projr_⊗ (a ,' b)) (a ,' b)) idp
+
+  lemma4 : ∀ {i} {A B : Set i}
+         → (a : A) → (b : B)
+         → uppt_⊗ (a ,' b) ≡ idp
+  lemma4 {i} {A} {B} a b = trans (sym (lemma2 a b)) (lemma3 a b)
+
+  indd_⊗ : ∀ {i j} {A B : Set i}
+         → (C : A ⊗ B → Set j)
+         → (g : (a : A) → (b : B) → C (a ,' b))
+         → (a : A) → (b : B)
+         → ind_⊗ C g (a ,' b) ≡ g a b
+  indd_⊗ {i} {j} {A} {B} C g a b = ap tp (lemma4 a b)
+    where
+      p : A ⊗ B
+      p = (a ,' b)
+      tp : (projl_⊗ p ,' projr_⊗ p) ≡ p → C p
+      tp x = transport C x (g a b)
+
+
+  ind2_⊗ : ∀ {i j} {A B : Set i}
+         → (C : A ⊗ B → Set j)
+         → (g : (a : A) → (b : B) → C (a ,' b))
+         → (a : A) → (b : B)
+         → ind_⊗ C g (a ,' b) ≡ g a b
+  ind2_⊗ {i} {j} {A} {B} C g a b =
+    ind_⊗ C g (a ,' b) =⟨ idp ⟩
+    transport C (uppt_⊗ (a ,' b)) (g (projl_⊗ (a ,' b)) (projr_⊗ (a ,' b))) =⟨ {!!} ⟩
+    g a b ∎
