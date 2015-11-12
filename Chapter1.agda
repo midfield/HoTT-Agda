@@ -394,8 +394,40 @@ module ex1-8 where
   -- show ℕ is a semi-ring
   -- add is associative
   add_assoc : (x y z : ℕ) → add x (add y z) ≡ add (add x y) z
-  add_assoc = ind_ℕ
+  add_assoc = ind_ℕ add_assoc_z add_assoc_s where
+    add_assoc_z : (y z : ℕ) → add 0 (add y z) ≡ add (add 0 y) z
+    add_assoc_z y z = idp
+    add_assoc_s : (n : ℕ)
+                → ((y z : ℕ) → (add n (add y z) ≡ add (add n y) z))
+                → ((y z : ℕ) → (add (suc n) (add y z) ≡ add (add (suc n) y) z))
+    add_assoc_s n fi y z = ap suc (fi y z)
 
--- add is commutative
-  add_comm : {x y : ℕ} → add x y ≡ add y x
-  add_comm = {!!}
+  -- add has (left) zero
+  add_lzero : (x : ℕ) → add 0 x ≡ x
+  add_lzero x = idp
+
+  -- add has (right) zero
+  add_rzero : (x : ℕ) → add x 0 ≡ x
+  add_rzero = ind_ℕ add_rzero_z add_rzero_s where
+    add_rzero_z = idp
+    add_rzero_s : (n : ℕ) → add n 0 ≡ n → add (suc n) 0 ≡ suc n
+    add_rzero_s n fi = ap suc fi
+
+  -- add is commutative
+  -- lemma first
+  add_suc : (x y : ℕ) → add (suc x) y ≡ add x (suc y)
+  add_suc = ind_ℕ add_suc_z add_suc_s where
+    add_suc_z = λ x → idp
+    add_suc_s : (n : ℕ)
+      → ((y : ℕ) → add (suc n) y ≡ add n (suc y))
+      → (y : ℕ) → add (suc (suc n)) y ≡ add (suc n) (suc y)
+    add_suc_s n fi y = ap suc (fi y)
+
+  add_comm : (x y : ℕ) → add x y ≡ add y x
+  add_comm = ind_ℕ add_comm_z add_comm_s where
+    add_comm_z : (y : ℕ) → add 0 y ≡ add y 0
+    add_comm_z y = trans (add_lzero y) (sym (add_rzero y))
+    add_comm_s : (n : ℕ)
+      → ((y : ℕ) → add n y ≡ add y n)
+      → ((y : ℕ) → add (suc n) y ≡ add y (suc n))
+    add_comm_s n fi y = trans (ap suc (fi y)) (add_suc y n)
