@@ -19,6 +19,19 @@ module Universe where
 
 open Universe public
 
+
+module Void where
+  data Empty : Type0 where
+
+  ¬ : ∀ {i} (A : Type i) → Type i
+  ¬ A = A → Empty
+
+open Void public
+
+record Unit : Type₀ where
+  constructor unit
+
+
 module Equality where
   infix 30 _≡_
   data _≡_ {i} {A : Type i} (a : A) : A → Type i where
@@ -29,11 +42,11 @@ module Equality where
   {-# BUILTIN EQUALITY _≡_ #-}
   {-# BUILTIN REFL  idp #-}
 
-  sym : ∀ {i} {A : Set i} {x y : A}
+  sym : ∀ {i} {A : Type i} {x y : A}
       → (x ≡ y) → (y ≡ x)
   sym idp = idp
 
-  trans : ∀ {i} {A : Set i} {x y z : A}
+  trans : ∀ {i} {A : Type i} {x y z : A}
         → (x ≡ y) → (y ≡ z) → (x ≡ z)
   trans idp idp = idp
 
@@ -64,7 +77,33 @@ module Equality where
   and this is helpful in some rare cases)
   -}
 
-  {- ap is cong, transport is subst -}
+  {- blee
+
+  ap is cong, transport is subst.
+
+  topologically: given two fibrations B → A, C → A, and a fibrewise map g (in
+  the slash category), a path p ∈ u ≡ v in B over a path x ≡ y in A, you get a
+  path [ap⇣ g p] = g u ≡ g v in C over X ≡ y in A.
+
+  if A is a point, a path in p in B gives a path [ap g p] in C.
+
+  for a single fibration B → A, a section f:A → B, and a path p in A, you get a
+  path [apd p] in B over p.  (i don't see why this isn't a special case of [ap⇣]
+  with B = A, C = B and the obvious maps.)
+
+  how to interpret coe?  is Type i a "moduli space"?  the book says to think of
+  the identity map Type i → Type i as a fibration.  from that point of view coe
+  is a special case of transport, rather than transport being proved using coe,
+  as it is in the library here.
+
+  transport : ∀ {i j} {A : Type i} (B : A → Type j) {x y : A} (p : x ≡ y)
+    → (B x → B y)
+  transport B idp b = b
+
+  coe : ∀ {i} {A B : Type i} (p : A ≡ B) → A → B
+  coe {i} p = transport (λ x → x) p
+
+  -}
 
   ap : ∀ {i j} {A : Type i} {B : Type j} (f : A → B) {x y : A}
     → (x ≡ y → f x ≡ f y)
@@ -126,7 +165,7 @@ open Equality public
 module Function where
   -- dependent function composition
   _∘_ : ∀ {a b c}
-    → {A : Set a} {B : A → Set b} {C : {x : A} → B x → Set c}
+    → {A : Type a} {B : A → Type b} {C : {x : A} → B x → Type c}
     → (f : {x : A} → (y : B x) → C y)
     → (g : (x : A) → B x)
     → ((x : A) → C (g x))
@@ -134,7 +173,7 @@ module Function where
 
   -- nondependent function composition
   _∘'_ : ∀ {a b c}
-    → {A : Set a} {B : Set b} {C : Set c}
+    → {A : Type a} {B : Type b} {C : Type c}
     → (B  → C) → (A → B) → (A → C)
   (f ∘' g) x = f (g x)
 
@@ -143,7 +182,7 @@ open Function public
 module FunExt where
 {- here is a naive definition of function extensionality
 
-  postulate fext : ∀ {i j} {A : Set i} {B : A → Set j} {f g : (a : A) → B a}
+  postulate fext : ∀ {i j} {A : Type i} {B : A → Type j} {f g : (a : A) → B a}
                 → ((x : A) → f x ≡ g x) → f ≡ g
 
   however this is not strong enough to prove useful stuff, like ex 1.6.  we need
@@ -151,16 +190,16 @@ module FunExt where
 
   -- taken from the book / HoTT-Agda
 
-  happly : ∀ {i j} {A : Set i} {B : A → Set j} (f g : (a : A) → B a)
+  happly : ∀ {i j} {A : Type i} {B : A → Type j} (f g : (a : A) → B a)
          → (f ≡ g) → ((x : A) → f x ≡ g x)
   happly f .f idp x = idp
 --  happly f g p x = ap (λ u → u x) p
 
-  happly2 : ∀ {i j} {A : Set i} {B : A → Set j} {f g : (a : A) → B a}
+  happly2 : ∀ {i j} {A : Type i} {B : A → Type j} {f g : (a : A) → B a}
          → (f ≡ g) → ((x : A) → f x ≡ g x)
   happly2 {f} {g} idp x = idp
 
-  record is-equiv {i j} {A : Set i} {B : Set j} (f : A → B) : Set (lmax i j)
+  record is-equiv {i j} {A : Type i} {B : Type j} (f : A → B) : Type (lmax i j)
     where
     field
       g : B → A
@@ -169,11 +208,11 @@ module FunExt where
       adj : (a : A) → ap f (g-f a) ≡ f-g (f a)
 
   postulate
-    funext : ∀ {i j} {A : Set i} {B : A → Set j} (f g : (a : A) → B a)
+    funext : ∀ {i j} {A : Type i} {B : A → Type j} (f g : (a : A) → B a)
            → is-equiv (happly f g)
 
 --  postulate
---    funext2 : ∀ {i j} {A : Set i} {B : A → Set j} (f g : (a : A) → B a)
+--    funext2 : ∀ {i j} {A : Type i} {B : A → Type j} (f g : (a : A) → B a)
 --           → is-equiv (happly2 {f} {g})
 
 open FunExt public
@@ -203,7 +242,7 @@ module Product where
       snd : B fst
   open Σ public
 
-  _×_ : ∀ {α β} (A : Set α) (B : Set β) → Set (lmax α β)
+  _×_ : ∀ {α β} (A : Type α) (B : Type β) → Type (lmax α β)
   A × B = Σ A (λ _ → B)
 
 open Product public
@@ -225,7 +264,7 @@ module Coproduct where
 open Coproduct public
 
 module Nat where
-  data ℕ : Set where
+  data ℕ : Type0 where
     zero : ℕ
     suc  : (n : ℕ) → ℕ
 

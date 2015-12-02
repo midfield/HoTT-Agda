@@ -369,6 +369,9 @@ module ex1-8 where
   check_mult_d : mult 2 4 ≡ 8
   check_mult_d = idp
 
+  check_mult_e : mult 1 0 ≡ 0
+  check_mult_e = idp
+
   exp : ℕ → ℕ → ℕ
   exp b e = exp' e b
     where exp' = rec_ℕ (λ x → 1) (λ x g m → mult m (g m))
@@ -417,7 +420,7 @@ module ex1-8 where
   -- lemma first
   add_suc : (x y : ℕ) → add (suc x) y ≡ add x (suc y)
   add_suc = ind_ℕ add_suc_z add_suc_s where
-    add_suc_z = λ x → idp
+    add_suc_z = λ y → idp
     add_suc_s : (n : ℕ)
       → ((y : ℕ) → add (suc n) y ≡ add n (suc y))
       → (y : ℕ) → add (suc (suc n)) y ≡ add (suc n) (suc y)
@@ -431,3 +434,44 @@ module ex1-8 where
       → ((y : ℕ) → add n y ≡ add y n)
       → ((y : ℕ) → add (suc n) y ≡ add y (suc n))
     add_comm_s n fi y = trans (ap suc (fi y)) (add_suc y n)
+
+  -- mult units
+  mult_left_z : (x : ℕ) → mult 0 x ≡ 0
+  mult_left_z _ = idp
+
+  mult_right_z : (x : ℕ) → mult x 0 ≡ 0
+  mult_right_z = ind_ℕ idp (λ n ih → ap (add 0) ih)
+
+  mult_left_u : (x : ℕ) → mult 1 x ≡ x
+  mult_left_u = add_rzero
+
+  mult_right_u : (x : ℕ) → mult x 1 ≡ x
+  mult_right_u = ind_ℕ idp (λ n ih → ap suc ih)
+
+  mult_comm0 : (x y : ℕ) → mult x (suc y) ≡ add x (mult x y)
+  mult_comm0 = ind_ℕ mult_comm0_z mult_comm0_s where
+    mult_comm0_z = λ y → idp
+    mult_comm0_s : (n : ℕ)
+      → ((y : ℕ) → mult n (suc y) ≡ add n (mult n y))
+      → (y : ℕ) → mult (suc n) (suc y) ≡ add (suc n) (mult (suc n) y)
+    mult_comm0_s n ih y =
+      mult (suc n) (suc y) =⟨ idp ⟩
+      add (suc y) (mult n (suc y)) =⟨ ap (add (suc y)) (ih y) ⟩
+      add (suc y) (add n (mult n y)) =⟨ add_assoc (suc y) n (mult n y) ⟩
+      add (add (suc y) n) (mult n y) =⟨ ap (λ e → add (suc e) (mult n y)) (add_comm y n) ⟩
+      add (add (suc n) y) (mult n y) =⟨ sym (add_assoc (suc n) y (mult n y)) ⟩
+      add (suc n) (mult (suc n) y) ∎
+
+  mult_comm : (x y : ℕ) → mult x y ≡ mult y x
+  mult_comm = ind_ℕ mult_comm_z mult_comm_s where
+    mult_comm_z = λ y → sym (mult_right_z y)
+    mult_comm_s : (n : ℕ)
+      → ((y : ℕ) → mult n y ≡ mult y n)
+      → (y : ℕ) → mult (suc n) y ≡ mult y (suc n)
+    mult_comm_s n ih y =
+      mult (suc n) y =⟨ ap (add y) (ih y) ⟩
+      add y (mult y n) =⟨ sym (mult_comm0 y n) ⟩
+      mult y (suc n) ∎
+
+  -- the rest of this is equally painful and is much easier to do using pattern
+  -- matching.
