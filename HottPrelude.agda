@@ -229,6 +229,10 @@ module Boolean where
   if true then t else e = t
   if false then t else e = e
 
+  -- fancy if-then-else
+  rec_Bool : ∀ {i} {A : Set i} → A → A → Bool → A
+  rec_Bool c0 c1 b = if b then c0 else c1
+
 open Boolean public
 
 module Product where
