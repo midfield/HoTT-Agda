@@ -275,3 +275,20 @@ module Nat where
   {-# BUILTIN NATURAL ℕ #-}
 
 open Nat public
+
+module Path where
+  -- path induction
+  pathi : ∀ {i} {j} {A : Type i}
+    → {C : (a : A) (b : A) → a ≡ b → Type j}
+    → ((x : A) → C x x idp)
+    → ((x : A) → (y : A) → (p : x ≡ y) → C x y p)
+  pathi c .x x idp = c x
+
+  bpathi : ∀ {i} {j} {A : Type i}
+    → (a : A)
+    → {C : (x : A) → a ≡ x → Type j}
+    → C a idp
+    → ((x : A) → (p : a ≡ x) → C x p)
+  bpathi a c .a idp = c
+
+open Path public
