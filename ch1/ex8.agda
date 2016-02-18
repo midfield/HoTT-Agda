@@ -91,11 +91,11 @@ add_suc = ind_ℕ add_suc_z add_suc_s where
 add_comm : (x y : ℕ) → add x y ≡ add y x
 add_comm = ind_ℕ add_comm_z add_comm_s where
   add_comm_z : (y : ℕ) → add 0 y ≡ add y 0
-  add_comm_z y = trans (add_lzero y) (sym (add_rzero y))
+  add_comm_z y = add_lzero y ∙ ! (add_rzero y)
   add_comm_s : (n : ℕ)
     → ((y : ℕ) → add n y ≡ add y n)
     → ((y : ℕ) → add (suc n) y ≡ add y (suc n))
-  add_comm_s n fi y = trans (ap suc (fi y)) (add_suc y n)
+  add_comm_s n fi y = ap suc (fi y) ∙ add_suc y n
 
 -- mult units
 mult_left_z : (x : ℕ) → mult 0 x ≡ 0
@@ -121,18 +121,18 @@ mult_comm0 = ind_ℕ mult_comm0_z mult_comm0_s where
     add (suc y) (mult n (suc y)) =⟨ ap (add (suc y)) (ih y) ⟩
     add (suc y) (add n (mult n y)) =⟨ add_assoc (suc y) n (mult n y) ⟩
     add (add (suc y) n) (mult n y) =⟨ ap (λ e → add (suc e) (mult n y)) (add_comm y n) ⟩
-    add (add (suc n) y) (mult n y) =⟨ sym (add_assoc (suc n) y (mult n y)) ⟩
+    add (add (suc n) y) (mult n y) =⟨ ! (add_assoc (suc n) y (mult n y)) ⟩
     add (suc n) (mult (suc n) y) ∎
 
 mult_comm : (x y : ℕ) → mult x y ≡ mult y x
 mult_comm = ind_ℕ mult_comm_z mult_comm_s where
-  mult_comm_z = λ y → sym (mult_right_z y)
+  mult_comm_z = λ y → ! (mult_right_z y)
   mult_comm_s : (n : ℕ)
     → ((y : ℕ) → mult n y ≡ mult y n)
     → (y : ℕ) → mult (suc n) y ≡ mult y (suc n)
   mult_comm_s n ih y =
     mult (suc n) y =⟨ ap (add y) (ih y) ⟩
-    add y (mult y n) =⟨ sym (mult_comm0 y n) ⟩
+    add y (mult y n) =⟨ ! (mult_comm0 y n) ⟩
     mult y (suc n) ∎
 
 -- the rest of this is equally painful and is much easier to do using pattern

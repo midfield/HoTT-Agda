@@ -20,5 +20,5 @@ is equal to the equality (p ∘1 q) = (p ∘3 q).
 
 triangle : ∀ {i} {A : Type i} {x y z : A}
   → (p : x ≡ y) (q : y ≡ z)
-  → trans (pf12 p q) (pf23 p q) ≡ (pf13 p q)
+  → (pf12 p q ∙ pf23 p q) ≡ (pf13 p q)
 triangle idp idp = idp

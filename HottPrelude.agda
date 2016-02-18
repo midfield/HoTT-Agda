@@ -42,13 +42,16 @@ module Equality where
   {-# BUILTIN EQUALITY _≡_ #-}
   {-# BUILTIN REFL  idp #-}
 
-  sym : ∀ {i} {A : Type i} {x y : A}
-      → (x ≡ y) → (y ≡ x)
-  sym idp = idp
+  infixr 80 _∙_
 
-  trans : ∀ {i} {A : Type i} {x y z : A}
-        → (x ≡ y) → (y ≡ z) → (x ≡ z)
-  trans idp idp = idp
+  -- trans
+  _∙_ : ∀ {i} {A : Type i } {x y z : A}
+      → (x ≡ y → y ≡ z → x ≡ z)
+  idp ∙ q = q
+
+  -- sym
+  ! : ∀ {i} {A : Type i} {x y : A} → (x ≡  y → y ≡ x)
+  ! idp = idp
 
   {- Dependent paths
 

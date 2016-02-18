@@ -116,7 +116,7 @@ lemma3 {i} {A} {B} a b = is-equiv.g-f  (funext (p₁ (a ,' b) ,' p₂ (a ,' b)) 
 lemma4 : ∀ {i} {A B : Set i}
        → (a : A) → (b : B)
        → uppt_⊗ (a ,' b) ≡ idp
-lemma4 {i} {A} {B} a b = trans (sym (lemma2 a b)) (lemma3 a b)
+lemma4 {i} {A} {B} a b = ! (lemma2 a b) ∙ (lemma3 a b)
 
 indd_⊗ : ∀ {i j} {A B : Set i}
        → (C : A ⊗ B → Set j)
