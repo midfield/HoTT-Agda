@@ -22,10 +22,6 @@ pf2 idp q = q
 pf3 : ∀ {i} {A : Type i} {x y z : A} → x ≡ y → y ≡ z → x ≡ z
 pf3 p idp = p
 
--- extra credit
-pf4 : ∀ {i} {A : Type i} {x y z : A} → x ≡ y → y ≡ z → x ≡ z
-pf4 {_} {_} {x} {_} {_} p q = transport (λ yp → x ≡ yp) q p
-
 pf12 : ∀ {i} {A : Type i} {x y z : A}
      → (p : x ≡ y) → (q : y ≡ z) → pf1 p q ≡ pf2 p q
 pf12 idp idp = idp
@@ -37,10 +33,4 @@ pf13 idp idp = idp
 pf23 : ∀ {i} {A : Type i} {x y z : A}
      → (p : x ≡ y) → (q : y ≡ z) → pf2 p q ≡ pf3 p q
 pf23 idp idp = idp
-
-pf14 : ∀ {i} {A : Type i} {x y z : A}
-     → (p : x ≡ y) → (q : y ≡ z) → pf1 p q ≡ pf4 p q
-pf14 idp idp = idp
-
-
 

@@ -116,8 +116,13 @@ module Equality where
   ap↓ g {p = idp} p = ap g p
 
   {-
+
   [apd↓] is defined in lib.PathOver. Unlike [ap↓] and [ap], [apd] is not
   definitionally a special case of [apd↓]
+
+  blee: apd is lift: given a section f of a fibration B → A, and a path p : x ≡
+  y in A, then there is a path f x ≡ f y lying over p.
+
   -}
 
   apd : ∀ {i j} {A : Type i} {B : A → Type j} (f : (a : A) → B a) {x y : A}
@@ -160,6 +165,15 @@ module Equality where
   infixr 40 ap
   syntax ap f p = p |in-ctx f
 
+  -- quasi equivalences
+  record is-equiv {i j} {A : Type i} {B : Type j} (f : A → B) : Type (lmax i j)
+    where
+    field
+      g : B → A
+      f-g : (b : B) → f (g b) ≡ b
+      g-f : (a : A) → g (f a) ≡ a
+      adj : (a : A) → ap f (g-f a) ≡ f-g (f a)
+
 open Equality public
 
 module Function where
@@ -198,14 +212,6 @@ module FunExt where
   happly2 : ∀ {i j} {A : Type i} {B : A → Type j} {f g : (a : A) → B a}
          → (f ≡ g) → ((x : A) → f x ≡ g x)
   happly2 {f} {g} idp x = idp
-
-  record is-equiv {i j} {A : Type i} {B : Type j} (f : A → B) : Type (lmax i j)
-    where
-    field
-      g : B → A
-      f-g : (b : B) → f (g b) ≡ b
-      g-f : (a : A) → g (f a) ≡ a
-      adj : (a : A) → ap f (g-f a) ≡ f-g (f a)
 
   postulate
     funext : ∀ {i j} {A : Type i} {B : A → Type j} (f g : (a : A) → B a)
