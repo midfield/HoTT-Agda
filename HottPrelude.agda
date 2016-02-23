@@ -42,17 +42,6 @@ module Equality where
   {-# BUILTIN EQUALITY _≡_ #-}
   {-# BUILTIN REFL  idp #-}
 
-  infixr 80 _∙_
-
-  -- trans
-  _∙_ : ∀ {i} {A : Type i } {x y z : A}
-      → (x ≡ y → y ≡ z → x ≡ z)
-  idp ∙ q = q
-
-  -- sym
-  ! : ∀ {i} {A : Type i} {x y : A} → (x ≡  y → y ≡ x)
-  ! idp = idp
-
   {- Dependent paths
 
   The notion of dependent path is a very important notion.
@@ -178,6 +167,69 @@ module Equality where
       adj : (a : A) → ap f (g-f a) ≡ f-g (f a)
 
 open Equality public
+
+
+module PathGroupoid {i} {A : Type i} where
+
+  {- Concatenation of paths
+
+  There are two different definitions of concatenation of paths, [_∙_] and [_∙'_],
+  with different definitionnal behaviour. Maybe we should have only one but it’s
+  sometimes useful to have both (in particular in lib.types.Paths).
+  -}
+
+  infixr 80 _∙_ _∙'_
+
+  _∙_ : {x y z : A}
+    → (x ≡ y → y ≡ z → x ≡ z)
+  idp ∙ q = q
+
+  _∙'_ : {x y z : A}
+    → (x ≡ y → y ≡ z → x ≡ z)
+  q ∙' idp = q
+
+  ∙=∙' : {x y z : A} (p : x ≡ y) (q : y ≡ z)
+    → p ∙ q ≡ p ∙' q
+  ∙=∙' idp idp = idp
+
+  ∙'=∙ : {x y z : A} (p : x ≡ y) (q : y ≡ z)
+    → p ∙' q ≡ p ∙ q
+  ∙'=∙ idp idp = idp
+
+  ∙-assoc : {x y z t : A} (p : x ≡ y) (q : y ≡ z) (r : z ≡ t)
+    → (p ∙ q) ∙ r ≡ p ∙ (q ∙ r)
+  ∙-assoc idp idp idp = idp
+
+  ∙'-assoc : {x y z t : A} (p : x ≡ y) (q : y ≡ z) (r : z ≡ t)
+    → (p ∙' q) ∙' r ≡ p ∙' (q ∙' r)
+  ∙'-assoc idp idp idp = idp
+
+  -- [∙-unit-l] and [∙'-unit-r] are definitional
+
+  ∙-unit-r : {x y : A} (q : x ≡ y) → q ∙ idp ≡ q
+  ∙-unit-r idp = idp
+
+  ∙'-unit-l : {x y : A} (q : x ≡ y) → idp ∙' q ≡ q
+  ∙'-unit-l idp = idp
+
+  {- Reversal of paths -}
+
+  ! : {x y : A} → (x ≡ y → y ≡ x)
+  ! idp = idp
+
+  !-inv-l : {x y : A} (p : x ≡ y) → (! p) ∙ p ≡ idp
+  !-inv-l idp = idp
+
+  !-inv'-l : {x y : A} (p : x ≡ y) → (! p) ∙' p ≡ idp
+  !-inv'-l idp = idp
+
+  !-inv-r : {x y : A} (p : x ≡ y) → p ∙ (! p) ≡ idp
+  !-inv-r idp = idp
+
+  !-inv'-r : {x y : A} (p : x ≡ y) → p ∙' (! p) ≡ idp
+  !-inv'-r idp = idp
+
+open PathGroupoid public
 
 module Function where
   -- dependent function composition
