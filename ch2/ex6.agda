@@ -11,9 +11,6 @@ equivalence.
 
 -}
 
---foo : (p : x ≡ y) (q : x ≡ z) → p ∙ ! p ∙ q ≡ q
---foo p idp = ?
-
 ex6-f-g : (p : x ≡ y) (q : x ≡ z) → p ∙ ! p ∙ q ≡ q
 ex6-f-g p q = ! (∙-assoc p (! p) q) ∙ ap (λ t → t ∙ q) (!-inv-r p)
 
