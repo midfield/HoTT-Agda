@@ -1,8 +1,8 @@
 {-# OPTIONS --without-K #-}
 
-module ch2.ex6 where
-
 open import HottPrelude
+
+module ch2.ex6 {i} {A : Type i} {x y z : A} where
 
 {-
 
@@ -11,17 +11,14 @@ equivalence.
 
 -}
 
-lem1 : ∀ {i} {A : Type i} {x y z : A}
-     → (p r : x ≡ y) → (q : y ≡ z) → p ≡ r
-     → p ∙ q ≡ r ∙ q
-lem1 p r q s = ap (λ t → t ∙ q) s
+--foo : (p : x ≡ y) (q : x ≡ z) → p ∙ ! p ∙ q ≡ q
+--foo p idp = ?
 
-ex6 : ∀ {i} {A : Type i} {x y : A}
-    → (p : x ≡ y)
-    → is-equiv (λ q → p ∙ q)
-ex6 p = record {
-  g = λ q → ! p ∙ q ;
-  f-g = λ q → ! (∙-assoc p (! p) q) ∙ lem1 (p ∙ (! p)) idp q (!-inv-r p) ;
-  g-f = {!!} ;
-  adj = {!!}
-  }
+ex6-f-g : (p : x ≡ y) (q : x ≡ z) → p ∙ ! p ∙ q ≡ q
+ex6-f-g p q = ! (∙-assoc p (! p) q) ∙ ap (λ t → t ∙ q) (!-inv-r p)
+
+ex6-g-f : (p : x ≡ y) (q : y ≡ z) → ! p ∙ p ∙ q ≡ q
+ex6-g-f p q = ! (∙-assoc (! p) p q) ∙ ap (λ t → t ∙ q) (!-inv-l p)
+
+ex6 : (p : x ≡ y) → is-equiv (_∙_ p)
+ex6 p = is-eq (_∙_ p) (_∙_ (! p)) (ex6-f-g p) (ex6-g-f p)

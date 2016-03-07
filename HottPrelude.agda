@@ -32,7 +32,7 @@ record Unit : Type₀ where
   constructor unit
 
 
-module Equality where
+module Paths where
   infix 30 _≡_
   data _≡_ {i} {A : Type i} (a : A) : A → Type i where
     idp : a ≡ a -- also known as refl
@@ -157,17 +157,7 @@ module Equality where
   infixr 40 ap
   syntax ap f p = p |in-ctx f
 
-  -- quasi equivalences
-  record is-equiv {i j} {A : Type i} {B : Type j} (f : A → B) : Type (lmax i j)
-    where
-    field
-      g : B → A
-      f-g : (b : B) → f (g b) ≡ b
-      g-f : (a : A) → g (f a) ≡ a
-      adj : (a : A) → ap f (g-f a) ≡ f-g (f a)
-
-open Equality public
-
+open Paths public
 
 module PathGroupoid {i} {A : Type i} where
 
@@ -231,7 +221,14 @@ module PathGroupoid {i} {A : Type i} where
 
 open PathGroupoid public
 
+
 module Function where
+  idf : ∀ {i} (A : Type i) → (A → A)
+  idf A = λ x → x
+
+  cst : ∀ {i j} {A : Type i} {B : Type j} (b : B) → (A → B)
+  cst b = λ _ → b
+
   -- dependent function composition
   _∘_ : ∀ {a b c}
     → {A : Type a} {B : A → Type b} {C : {x : A} → B x → Type c}
@@ -246,7 +243,90 @@ module Function where
     → (B  → C) → (A → B) → (A → C)
   (f ∘' g) x = f (g x)
 
+  -- Application
+  infixr 0 _$_
+  _$_ : ∀ {i j} {A : Type i} {B : A → Type j} → (∀ x → B x) → (∀ x → B x)
+  f $ x = f x
+
 open Function public
+
+
+module Equivalences where
+  ∘-ap : ∀ {i j k} {A : Type i} {B : Type j} {C : Type k} (g : B → C) (f : A → B)
+    {x y : A} (p : x ≡ y) → ap g (ap f p) ≡ ap (g ∘ f) p
+  ∘-ap f g idp = idp
+
+  ap-∘ : ∀ {i j k} {A : Type i} {B : Type j} {C : Type k} (g : B → C) (f : A → B)
+    {x y : A} (p : x ≡ y) → ap (g ∘ f) p ≡ ap g (ap f p)
+  ap-∘ f g idp = idp
+
+  ap-idf : ∀ {i} {A : Type i} {u v : A} (p : u ≡ v) → ap (idf A) p ≡ p
+  ap-idf idp = idp
+
+  anti-whisker-right : ∀ {i} {A : Type i} {x y z : A} (p : y ≡ z) {q r : x ≡ y}
+    → (q ∙ p ≡ r ∙ p → q ≡ r)
+  anti-whisker-right idp {q} {r} h =
+    ! (∙-unit-r q) ∙ (h ∙ ∙-unit-r r)
+
+  {- Naturality of homotopies -}
+  htpy-natural : ∀ {i j} {A : Type i} {B : Type j} {x y : A} {f g : A → B}
+    (p : ∀ x → (f x ≡ g x)) (q : x ≡ y) → ap f q ∙ p y ≡ p x ∙ ap g q
+  htpy-natural p idp = ! (∙-unit-r _)
+
+  htpy-natural-toid : ∀ {i} {A : Type i} {f : A → A}
+    (p : ∀ (x : A) → f x ≡ x) → (∀ x → ap f (p x) ≡ p (f x))
+  htpy-natural-toid {f = f} p x = anti-whisker-right (p x) $
+    htpy-natural p (p x) ∙ ap (λ q → p (f x) ∙ q) (ap-idf (p x))
+
+  -- quasi equivalences
+  record is-equiv {i j} {A : Type i} {B : Type j} (f : A → B) : Type (lmax i j)
+    where
+    field
+      g : B → A
+      f-g : (b : B) → f (g b) ≡ b
+      g-f : (a : A) → g (f a) ≡ a
+      adj : (a : A) → ap f (g-f a) ≡ f-g (f a)
+
+  {-
+  In order to prove that something is an equivalence, you have to give an inverse
+  and a proof that it’s an inverse (you don’t need the adj part).
+  [is-eq] is a very, very bad name.
+  -}
+  is-eq : ∀ {i j} {A : Type i} {B : Type j} (f : A → B)
+    (g : B → A) (f-g : (b : B) → f (g b) ≡ b)
+    (g-f : (a : A) → g (f a) ≡ a) → is-equiv f
+  is-eq {i} {j} {A} {B} f g f-g g-f =
+   record {g = g; f-g = f-g'; g-f = g-f; adj = adj} where
+    f-g' : (b : B) → f (g b) ≡ b
+    f-g' b = ! (ap (f ∘ g) (f-g b)) ∙ ap f (g-f (g b)) ∙ f-g b
+
+    adj : (a : A) → ap f (g-f a) ≡ f-g' (f a)
+    adj a =
+      ap f (g-f a)
+        =⟨ ! (!-inv-l (ap (f ∘ g) (f-g (f a)))) |in-ctx (λ q → q ∙ ap f (g-f a)) ⟩
+      (! (ap (f ∘ g) (f-g (f a))) ∙ ap (f ∘ g) (f-g (f a))) ∙ ap f (g-f a)
+        =⟨ ∙-assoc (! (ap (f ∘ g) (f-g (f a)))) (ap (f ∘ g) (f-g (f a))) _ ⟩
+      ! (ap (f ∘ g) (f-g (f a))) ∙ ap (f ∘ g) (f-g (f a)) ∙ ap f (g-f a)
+        =⟨ lemma |in-ctx (λ q → ! (ap (f ∘ g) (f-g (f a))) ∙ q) ⟩
+      ! (ap (f ∘ g) (f-g (f a))) ∙ ap f (g-f (g (f a))) ∙ f-g (f a) ∎
+      where
+      lemma : ap (f ∘ g) (f-g (f a)) ∙ ap f (g-f a)
+           ≡ ap f (g-f (g (f a))) ∙ f-g (f a)
+      lemma =
+        ap (f ∘ g) (f-g (f a)) ∙ ap f (g-f a)
+          =⟨ htpy-natural-toid f-g (f a) |in-ctx (λ q → q ∙ ap f (g-f a)) ⟩
+        f-g (f (g (f a))) ∙ ap f (g-f a)
+          =⟨ ! (ap-idf (ap f (g-f a))) |in-ctx (λ q → f-g (f (g (f a))) ∙ q) ⟩
+        f-g (f (g (f a))) ∙ ap (idf B) (ap f (g-f a))
+          =⟨ ! (htpy-natural f-g (ap f (g-f a))) ⟩
+        ap (f ∘ g) (ap f (g-f a)) ∙ f-g (f a)
+          =⟨ ap-∘ f g (ap f (g-f a)) |in-ctx (λ q → q ∙ f-g (f a)) ⟩
+        ap f (ap g (ap f (g-f a))) ∙ f-g (f a)
+          =⟨ ∘-ap g f (g-f a) ∙ htpy-natural-toid g-f a
+             |in-ctx (λ q → ap f q ∙ f-g (f a)) ⟩
+        ap f (g-f (g (f a))) ∙ f-g (f a) ∎
+
+open Equivalences public
 
 module FunExt where
 {- here is a naive definition of function extensionality
