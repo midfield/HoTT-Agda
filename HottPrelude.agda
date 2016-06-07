@@ -69,7 +69,7 @@ module Paths where
   and this is helpful in some rare cases)
   -}
 
-  {- blee
+  {- midfield:
 
   ap is cong, transport is subst.
 
@@ -112,7 +112,7 @@ module Paths where
   [apd↓] is defined in lib.PathOver. Unlike [ap↓] and [ap], [apd] is not
   definitionally a special case of [apd↓]
 
-  blee: apd is lift: given a section f of a fibration B → A, and a path p : x ≡
+  midfield: apd is lift: given a section f of a fibration B → A, and a path p : x ≡
   y in A, then there is a path f x ≡ f y lying over p.
 
   -}

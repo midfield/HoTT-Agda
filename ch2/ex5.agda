@@ -11,7 +11,7 @@ Prove that the functions (2.3.6) and (2.3.7) are inverse equivalences.
 (2.3.6) : (f(x) = f(y)) → (p_*(f(x)) = f(y))
 (2.3.7) : (p_*(f(x)) = f(y)) → (f(x) = f(y))
 
-blee
+midfield:
 
 p_*(u) := transport B p u
 
