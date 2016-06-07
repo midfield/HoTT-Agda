@@ -38,11 +38,21 @@ pair= : ∀ {i j} {A : Type i} {B : A → Type j} {x y : Σ A B}
   → x ≡ y
 pair= (idp , idp) = idp
 
-
-{-
 theorem-265 : ∀ {i j} {A A' : Type i} {B : A → Type j} {B' : A' → Type j}
   → (g : A → A') → (h : (a : A) → B a → B' (g a))
-  → (x y : Σ A B) → (p : fst x ≡ fst y) → (q : transport B p (snd x) ≡ snd y)
-  → ap (pair-ap g h) (pair= (p , q)) ≡ pair= (ap g p , ap (h (fst x)) q)
-theorem-265 = {!!}
--}
+  → {x y : Σ A B} → (p : fst x ≡ fst y) → (q : transport B p (snd x) ≡ snd y)
+  → {!!}
+--  → pair-ap g h (fst x , snd x) ≡ pair-ap g h (fst y , snd y)
+--  → (g (fst x) , h (fst x) (snd x)) ≡ (g (fst y) , h (fst y) (snd y))
+--  → ap (pair-ap g h) (pair= (p , q)) ≡ pair= (ap g p , ap (h (fst y)) q)
+theorem-265 g h {x} {y} p q = ap (pair-ap g h) (pair= (p , q))
+
+-- → ap (pair-ap g h) (pair= (p , q)) ≡ pair= (ap g p , ap (h (fst y)) q)
+--  → ap (pair-ap g h) -- Σ A B → Σ A' B'
+--    (pair= (p , q)) -- x ≡ y
+--    ≡
+--    pair= (ap g p , -- g (fst x) ≡ g (fst y)
+--           λ r → transport B' r (h (fst x) (snd x)) ≡ 
+--           ap (h (fst y)) q) -- h (fst x) (transport B p (snd x)) ≡ h (fst x) (snd y)
+--theorem-265 = {!!}
+

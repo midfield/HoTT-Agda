@@ -17,5 +17,7 @@ ex6-f-g p q = ! (∙-assoc p (! p) q) ∙ ap (λ t → t ∙ q) (!-inv-r p)
 ex6-g-f : (p : x ≡ y) (q : y ≡ z) → ! p ∙ p ∙ q ≡ q
 ex6-g-f p q = ! (∙-assoc (! p) p q) ∙ ap (λ t → t ∙ q) (!-inv-l p)
 
+-- as noted in HoTT-Agda, is-equiv.adj is derivable from f-g and g-f
+
 ex6 : (p : x ≡ y) → is-equiv (_∙_ p)
 ex6 p = is-eq (_∙_ p) (_∙_ (! p)) (ex6-f-g p) (ex6-g-f p)

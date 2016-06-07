@@ -26,7 +26,13 @@ f : (x : A) → (p : x ≡ x) → (p ≡ idp)
 topologically, this is what i think is going on (though i am not sure.)
 
 first off, path induction is (moraly) equivalent to (a constructive) CHP
-(covering homotopy property, e.g. lifting of paths.)
+(covering homotopy property, e.g. lifting of paths.)  this is covered in
+Awodey-Warren.  basically
+
+recursor = introduction
+induction = elimination (+ conversion?)
+
+
 
 
 given a
